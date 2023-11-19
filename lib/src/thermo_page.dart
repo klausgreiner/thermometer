@@ -12,6 +12,8 @@ class _ThermoPageState extends State<ThermoPage> with TickerProviderStateMixin {
   int selected = 1;
   double fluidHeight = 120;
   int temp = 20;
+  double posX = 0;
+  double posY = 0;
 
   late Animation<double> agitationAnimation;
   late AnimationController controller;
@@ -72,108 +74,157 @@ class _ThermoPageState extends State<ThermoPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
-        body: Stack(children: [
-          Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).size.width / 2,
-              ),
-              child: FullThermometer(
-                agitationAnimation: agitationAnimation,
-                aliveFeeling: aliveFeeling,
-                fluidHeight: fluidHeight,
-              ),
-            ),
-          ),
-          Align(
+    return Listener(
+      onPointerDown: (event) {
+        setState(() {
+          posX = event.localPosition.dx;
+          posY = event.localPosition.dy;
+        });
+        // use event.localPosition.dx or event.localPosition.dy
+      },
+      child: Scaffold(
+          backgroundColor: const Color(0xFFF5F5F5),
+          body: Stack(children: [
+            false
+                ? Align(
+                    alignment: Alignment.topLeft,
+                    child: Text("Clicked: $posX $posY"),
+                  )
+                : const SizedBox(),
+            Align(
               alignment: Alignment.center,
               child: Padding(
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.width / 2 + 200,
-                  left: 40,
+                  bottom: MediaQuery.of(context).size.width / 2,
                 ),
-                child: Text(
-                  '$temp°',
-                  style: const TextStyle(
-                      fontSize: 120,
-                      color: Color(0xFFD6D6D6),
-                      fontWeight: FontWeight.w400),
+                child: FullThermometer(
+                  agitationAnimation: agitationAnimation,
+                  aliveFeeling: aliveFeeling,
+                  fluidHeight: fluidHeight,
                 ),
-              )),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icons.ac_unit,
-                    color: const Color(0xFF07BCD4),
-                    onPressed: () {
-                      setState(() {
+              ),
+            ),
+            Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).size.width / 2 + 200,
+                    left: 40,
+                  ),
+                  child: Text(
+                    '$temp°',
+                    style: const TextStyle(
+                        fontSize: 120,
+                        color: Color(0xFFD6D6D6),
+                        fontWeight: FontWeight.w400),
+                  ),
+                )),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icons.ac_unit,
+                      color: const Color(0xFF07BCD4),
+                      onPressed: () {
                         selected = 0;
-                        fluidHeight = 160;
-                        temp = 10;
-                      });
-                    },
-                    selected: selected == 0,
-                  ),
-                  IconButton(
-                    icon: Icons.water_drop,
-                    color: const Color(0xFFFFC107),
-                    onPressed: () {
-                      setState(() {
+                        animateFluidHeight(160);
+                        animateTempValue(10);
+                      },
+                      selected: selected == 0,
+                    ),
+                    IconButton(
+                      icon: Icons.water_drop,
+                      color: const Color(0xFFFFC107),
+                      onPressed: () {
                         selected = 1;
-                        fluidHeight = 120;
-                        temp = 20;
-                      });
-                    },
-                    selected: selected == 1,
-                  ),
-                  IconButton(
-                    icon: Icons.whatshot,
-                    color: const Color(0xFFFF5722),
-                    onPressed: () {
-                      setState(() {
+                        animateFluidHeight(120);
+                        animateTempValue(20);
+                      },
+                      selected: selected == 1,
+                    ),
+                    IconButton(
+                      icon: Icons.whatshot,
+                      color: const Color(0xFFFF5722),
+                      onPressed: () {
                         selected = 2;
-                        fluidHeight = 50;
-                        temp = 35;
-                      });
-                    },
-                    selected: selected == 2,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: RotatedBox(
-              quarterTurns: 3,
-              child: Container(
-                height: 100,
-                padding: const EdgeInsets.symmetric(horizontal: 250),
-                child: Slider(
-                  value: temp.toDouble(),
-                  min: 0,
-                  max: 50,
-                  label: temp.toString(),
-                  divisions: 50,
-                  onChanged: (value) {
-                    setState(() {
-                      temp = value.toInt();
-                      fluidHeight = getFluidHeight(temp.toDouble());
-                    });
-                  },
+                        animateFluidHeight(50);
+                        animateTempValue(35);
+                      },
+                      selected: selected == 2,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ]));
+            Align(
+              alignment: Alignment.centerRight,
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: Container(
+                  height: 100,
+                  padding: const EdgeInsets.symmetric(horizontal: 250),
+                  child: Slider(
+                    value: temp.toDouble(),
+                    min: 0,
+                    max: 50,
+                    label: temp.toString(),
+                    divisions: 50,
+                    onChanged: (value) {
+                      animateTempValue(value.toInt());
+                      animateFluidHeight(getFluidHeight(temp.toDouble()));
+                      setState(() {});
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ])),
+    );
+  }
+
+  Future<void> animateFluidHeight(double targetHeight,
+      {Duration duration = const Duration(seconds: 1)}) async {
+    final double initialFluidHeight = fluidHeight;
+    final AnimationController controller =
+        AnimationController(duration: duration, vsync: this);
+    final Animation<double> animation =
+        Tween<double>(begin: initialFluidHeight, end: targetHeight).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+    );
+
+    animation.addListener(() {
+      setState(() {
+        fluidHeight = animation.value;
+      });
+    });
+
+    await controller.forward();
+    controller.dispose();
+  }
+
+  Future<void> animateTempValue(int targetHeight,
+      {Duration duration = const Duration(seconds: 1)}) async {
+    final int initialTemp = temp;
+    final AnimationController controller =
+        AnimationController(duration: duration, vsync: this);
+    final Animation<int> animation =
+        IntTween(begin: initialTemp, end: targetHeight).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+    );
+
+    animation.addListener(() {
+      setState(() {
+        temp = animation.value;
+        print(temp);
+      });
+    });
+
+    await controller.forward();
+    controller.dispose();
   }
 
   double getFluidHeight(double temp) {

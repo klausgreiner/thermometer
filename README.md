@@ -13,3 +13,7 @@ Trying to reproduce a fluid animation as well
     [ ] Make animation react to moviment (shake according to velocity)
     [ ] Add sound effect
     [ ] Create crazy effect of freezing and heating up as it goes (study how game engines do it)
+
+## DONE
+    [x] added an animation when volume changes 
+    [x] added an animation when temperature changes 
