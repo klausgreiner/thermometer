@@ -3,7 +3,7 @@
 A repository to play around with custom painter
 Trying to reproduce a fluid animation as well
 
-![Alt Text](./assets/preview.gif)
+![Preview](https://github.com/klausgreiner/thermometer/blob/main/assets/images/preview.gif?raw=true)
 
 
 ## TODO
